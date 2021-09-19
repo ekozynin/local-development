@@ -1,4 +1,3 @@
----
 version: '3.9'
 
 # Docker Configuration Parameters
@@ -14,6 +13,8 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: ERROR
+      ZOOKEEPER_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,kafka=ERROR,kafka.request.logger=ERROR,kafka.controller=ERROR,kafka.log.LogCleaner=ERROR,state.change.logger=ERROR,kafka.authorizer.logger=ERROR,org.apache.kafka=ERROR
 
   broker1:
     image: confluentinc/cp-server:${CONFLUENT_VERSION}
@@ -45,6 +46,7 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       KAFKA_LOG4J_ROOT_LOGLEVEL: ERROR
+      KAFKA_LOG4J_LOGGERS: kafka=ERROR,kafka.producer.async.DefaultEventHandler=ERROR,kafka.request.logger=ERROR,kafka.controller=ERROR,kafka.log.LogCleaner=ERROR,state.change.logger=ERROR,kafka.authorizer.logger=ERROR,org.apache.zookeeper=ERROR,org.apache.kafka=ERROR,kafka.cluster=ERROR,kafka.coordinator=ERROR,kafka.log=ERROR,kafka.server=ERROR,kafka.zookeeper=ERROR
 
   broker2:
     image: confluentinc/cp-server:${CONFLUENT_VERSION}
@@ -76,6 +78,7 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       KAFKA_LOG4J_ROOT_LOGLEVEL: ERROR
+      KAFKA_LOG4J_LOGGERS: kafka=ERROR,kafka.producer.async.DefaultEventHandler=ERROR,kafka.request.logger=ERROR,kafka.controller=ERROR,kafka.log.LogCleaner=ERROR,state.change.logger=ERROR,kafka.authorizer.logger=ERROR,org.apache.zookeeper=ERROR,org.apache.kafka=ERROR,kafka.cluster=ERROR,kafka.coordinator=ERROR,kafka.log=ERROR,kafka.server=ERROR,kafka.zookeeper=ERROR
 
   broker3:
     image: confluentinc/cp-server:${CONFLUENT_VERSION}
@@ -107,6 +110,7 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       KAFKA_LOG4J_ROOT_LOGLEVEL: ERROR
+      KAFKA_LOG4J_LOGGERS: kafka=ERROR,kafka.producer.async.DefaultEventHandler=ERROR,kafka.request.logger=ERROR,kafka.controller=ERROR,kafka.log.LogCleaner=ERROR,state.change.logger=ERROR,kafka.authorizer.logger=ERROR,org.apache.zookeeper=ERROR,org.apache.kafka=ERROR,kafka.cluster=ERROR,kafka.coordinator=ERROR,kafka.log=ERROR,kafka.server=ERROR,kafka.zookeeper=ERROR
 
   schema-registry:
     image: confluentinc/cp-schema-registry:${CONFLUENT_VERSION}
@@ -123,12 +127,16 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: 'broker1:29091,broker2:29092,broker3:29093'
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
       SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: ERROR
+      SCHEMA_REGISTRY_LOG4J_LOGGERS: kafka=ERROR,org.apache.kafka=ERROR,org.apache.kafka.clients=ERROR,org.apache.kafka.common=ERROR
 
   connect:
     build:
       context: ./connect
       args:
         CONFLUENT_VERSION: ${CONFLUENT_VERSION}
+        AZURE_BLOB_STORAGE_VERSION: ${AZURE_BLOB_STORAGE_VERSION}
+        KAFKA_CONNECT_S3_VERSION: ${KAFKA_CONNECT_S3_VERSION}
+        KAFKA_CONNECT_SPOOLDIR_VERSION: ${KAFKA_CONNECT_SPOOLDIR_VERSION}
     image: local-kafka-connect
     hostname: connect
     container_name: connect
@@ -160,8 +168,8 @@ services:
       CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
       CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       CONNECT_PLUGIN_PATH: "/usr/share/java,/usr/share/confluent-hub-components"
-      CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
       CONNECT_LOG4J_ROOT_LOGLEVEL: ERROR
+      CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,kafka=ERROR,kafka.request.logger=ERROR,kafka.controller=ERROR,kafka.log.LogCleaner=ERROR,state.change.logger=ERROR,kafka.authorizer.logger=ERROR,org.apache.kafka=ERROR
 
   control-center:
     image: confluentinc/cp-enterprise-control-center:${CONFLUENT_VERSION}
@@ -189,6 +197,7 @@ services:
       CONFLUENT_METRICS_TOPIC_REPLICATION: 1
       PORT: 9021
       CONTROL_CENTER_LOG4J_ROOT_LOGLEVEL: ERROR
+      CONTROL_CENTER_LOG4J_LOGGERS: kafka=ERROR,org.apache.kafka=ERROR,org.apache.zookeeper=ERROR
 
   ksqldb-server:
     image: confluentinc/cp-ksqldb-server:${CONFLUENT_VERSION}
@@ -212,9 +221,10 @@ services:
       KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       KSQL_KSQL_CONNECT_URL: "http://connect:8083"
       KSQL_KSQL_LOGGING_PROCESSING_TOPIC_REPLICATION_FACTOR: 1
-      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: 'true'
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: 'false'
       KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: 'true'
       KSQL_LOG4J_ROOT_LOGLEVEL: ERROR
+      KSQL_LOG4J_LOGGERS: io.confluent.rest-utils.requests=ERROR,io.confluent=ERROR,org.apache.zookeeper=ERROR
 
   ksqldb-cli:
     image: confluentinc/cp-ksqldb-cli:${CONFLUENT_VERSION}
@@ -227,6 +237,8 @@ services:
       - ksqldb-server
     entrypoint: /bin/sh
     tty: true
+    environment:
+      KSQLDB_LOG4J_ROOT_LOGLEVEL: ERROR
 
   rest-proxy:
     image: confluentinc/cp-kafka-rest:${CONFLUENT_VERSION}
@@ -245,3 +257,4 @@ services:
       KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
       KAFKA_REST_SCHEMA_REGISTRY_URL: 'http://schema-registry:8081'
       KAFKA_REST_LOG4J_ROOT_LOGLEVEL: ERROR
+      KAFKA_REST_LOG4J_LOGGERS: kafka=ERROR,org.apache.kafka=ERROR,org.apache.zookeeper=ERROR
