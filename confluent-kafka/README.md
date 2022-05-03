@@ -3,6 +3,9 @@
 Build & launch it
 `docker-compose up -d --build`
 
+Build & launch it (over-writing environment variables)
+`docker-compose up -e KAFKA_AUTO_CREATE_TOPICS_ENABLE=true -d --build`
+
 Stop it
 `docker-compose stop`
 
