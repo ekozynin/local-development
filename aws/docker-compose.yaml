@@ -1,16 +1,31 @@
-version: '3.9'
+version: "3.8"
 
 services:
-  dynamo:
-    container_name: dynamodb
-    image: amazon/dynamodb-local
-    restart: always
+  localstack:
+    # https://docs.localstack.cloud/localstack/configuration/
+    image: localstack/localstack:1.0.4
+    hostname: localstack
+    container_name: localstack
     ports:
-      - "8000:8000"
-    volumes:
-      - dynamodata:/home/dynamodblocal
-    working_dir: /home/dynamodblocal
-    command: ["-jar", "DynamoDBLocal.jar", "-optimizeDbBeforeStartup", "-sharedDb", "-dbPath", "."]
+      - "4566-4583:4566-4583"
+    depends_on:
+      - email
+    environment:
+      - LOCALSTACK_API_KEY=${LOCALSTACK_API_KEY}
+      - AWS_DEFAULT_REGION=ap-southeast-2
+      - LS_LOG=debug
+      - SMTP_HOST=email
+      - SMTP_USER=
+      - SMTP_PASS=
+      - SMTP_EMAIL=from@local
 
-volumes:
-  dynamodata:
+  email:
+    image: greenmail/standalone:1.6.10
+    hostname: email
+    container_name: email
+    ports:
+      - "3080:8080"
+      - "3025:25"
+      - "3110:110"
+    environment:
+      - GREENMAIL_OPTS=-Dgreenmail.setup.all -Dgreenmail.hostname=0.0.0.0 -Dgreenmail.auth.disabled -Dgreenmail.verbose
